@@ -22,6 +22,8 @@
 #include <utils/RefBase.h>
 #include <utils/StrongPointer.h>
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 namespace hardware {
 namespace details {
@@ -38,7 +40,7 @@ class LazyServiceRegistrarImpl;
  *
  * For more information on init .rc configuration, see system/core/init/README.md
  **/
-class LazyServiceRegistrar {
+class LIBHIDL_EXPORT LazyServiceRegistrar {
    public:
      static LazyServiceRegistrar& getInstance();
      status_t registerService(const sp<::android::hidl::base::V1_0::IBase>& service,

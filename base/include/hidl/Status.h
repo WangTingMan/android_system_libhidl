@@ -24,6 +24,8 @@
 #include <utils/Errors.h>
 #include <utils/StrongPointer.h>
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 namespace hardware {
 
@@ -52,7 +54,7 @@ namespace hardware {
 
 // Transport implementation detail. HIDL implementors, see Return below. HAL implementations should
 // return HIDL-defined errors rather than use this.
-class Status final {
+class LIBHIDL_EXPORT Status final {
 public:
     // Note: forked from
     // - frameworks/base/core/java/android/os/android/os/Parcel.java.
@@ -136,7 +138,7 @@ std::ostream& operator<< (std::ostream& stream, const Status& s);
 template<typename T> class Return;
 
 namespace details {
-    class return_status {
+    class LIBHIDL_EXPORT return_status {
     private:
         Status mStatus {};
         mutable bool mCheckedStatus = false;
@@ -213,7 +215,7 @@ enum class HidlReturnRestriction {
  *
  * The restriction will be applied when Return objects are deconstructed.
  */
-void setProcessHidlReturnRestriction(HidlReturnRestriction restriction);
+LIBHIDL_EXPORT void setProcessHidlReturnRestriction(HidlReturnRestriction restriction);
 
 template<typename T> class Return : public details::return_status {
 private:

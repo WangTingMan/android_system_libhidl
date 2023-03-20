@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define _CRT_SECURE_NO_WARNINGS
 
 #define LOG_TAG "HidlSupport"
 
@@ -27,7 +28,6 @@
 
 // C includes
 #include <inttypes.h>
-#include <unistd.h>
 
 // C++ includes
 #include <fstream>

@@ -19,6 +19,8 @@
 
 #include <android/hidl/base/1.0/IBase.h>
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 namespace hardware {
 namespace details {
@@ -32,7 +34,7 @@ namespace details {
  *
  * TODO(b/33754152): calling this method multiple times should not re-wrap.
  */
-sp<::android::hidl::base::V1_0::IBase> wrapPassthroughInternal(
+LIBHIDL_EXPORT sp<::android::hidl::base::V1_0::IBase> wrapPassthroughInternal(
     sp<::android::hidl::base::V1_0::IBase> iface);
 
 /**

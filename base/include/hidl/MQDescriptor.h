@@ -17,7 +17,11 @@
 #ifndef _FMSGQ_DESCRIPTOR_H
 #define _FMSGQ_DESCRIPTOR_H
 
+#ifndef _MSC_VER
 #include <unistd.h>
+#else
+#include <corecrt_io.h>
+#endif
 
 #include <cutils/native_handle.h>
 #include <fmq/MQDescriptorBase.h>
@@ -155,7 +159,7 @@ MQDescriptor<T, flavor>& MQDescriptor<T, flavor>::operator=(const MQDescriptor& 
                 other.mHandle->numFds, other.mHandle->numInts);
 
         for (int i = 0; i < other.mHandle->numFds; ++i) {
-            mHandle->data[i] = dup(other.mHandle->data[i]);
+            mHandle->data[i] = _dup(other.mHandle->data[i]);
         }
 
         memcpy(&mHandle->data[other.mHandle->numFds], &other.mHandle->data[other.mHandle->numFds],

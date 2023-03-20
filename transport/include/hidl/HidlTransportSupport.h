@@ -24,6 +24,8 @@
 #include <hidl/HidlTransportUtils.h>
 #include <hidl/ServiceManagement.h>
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 namespace hardware {
 
@@ -43,12 +45,12 @@ namespace hardware {
  *   configureRpcThreadPool(1, true); // transport won't launch any threads by itself
  *
  */
-void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin);
+LIBHIDL_EXPORT void configureRpcThreadpool(size_t maxThreads, bool callerWillJoin);
 
 /* Joins a threadpool that you configured earlier with
  * configureRpcThreadPool(x, true);
  */
-void joinRpcThreadpool();
+LIBHIDL_EXPORT void joinRpcThreadpool();
 
 /**
  * Sets up the transport for use with (e)poll.
@@ -59,7 +61,7 @@ void joinRpcThreadpool();
  *
  * @return the file descriptor to be used with (e)poll, or -1 in case of error.
  */
-int setupTransportPolling();
+LIBHIDL_EXPORT int setupTransportPolling();
 
 /**
  * Handles transport work after poll() returns.
@@ -68,7 +70,7 @@ int setupTransportPolling();
  *
  * @return OK when successful
  */
-status_t handleTransportPoll(int fd);
+LIBHIDL_EXPORT status_t handleTransportPoll(int fd);
 
 /**
  * Sets a minimum scheduler policy for all transactions coming into this
@@ -81,7 +83,7 @@ status_t handleTransportPoll(int fd);
  * @param policy scheduler policy as defined in linux UAPI
  * @param priority priority. [-20..19] for SCHED_NORMAL, [1..99] for RT
  */
-bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
+LIBHIDL_EXPORT bool setMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service,
                            int policy, int priority);
 
 struct SchedPrio {
@@ -89,7 +91,7 @@ struct SchedPrio {
     int prio;
 };
 
-SchedPrio getMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service);
+LIBHIDL_EXPORT SchedPrio getMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& service);
 
 /**
  * Sets whether or not this object should request security contexts to be populatd for incoming
@@ -101,26 +103,26 @@ SchedPrio getMinSchedulerPolicy(const sp<::android::hidl::base::V1_0::IBase>& se
  * @param service the service to set the policy for
  * @param requesting whether or not to request sid (default is false)
  */
-bool setRequestingSid(const sp<::android::hidl::base::V1_0::IBase>& service, bool requesting);
+LIBHIDL_EXPORT bool setRequestingSid(const sp<::android::hidl::base::V1_0::IBase>& service, bool requesting);
 
 /**
  * Says whether or not this service is requesting a SID. If this was set after the service was
  * sent to another process, then it will not take effect.
  */
-bool getRequestingSid(const sp<::android::hidl::base::V1_0::IBase>& service);
+LIBHIDL_EXPORT bool getRequestingSid(const sp<::android::hidl::base::V1_0::IBase>& service);
 
 /**
  * Returns whether two interfaces represent the same interface. References to interfaces in the same
  * process will always be equivalent. However, in order to compare a service that is a proxy to a
  * different process, its underlying structure may have to be checked.
  */
-bool interfacesEqual(const sp<::android::hidl::base::V1_0::IBase>& left,
+LIBHIDL_EXPORT bool interfacesEqual(const sp<::android::hidl::base::V1_0::IBase>& left,
                      const sp<::android::hidl::base::V1_0::IBase>& right);
 
 namespace details {
 
 // Return PID on userdebug / eng builds and IServiceManager::PidConstant::NO_PID on user builds.
-int32_t getPidIfSharable();
+LIBHIDL_EXPORT int32_t getPidIfSharable();
 
 // cast the interface IParent to IChild.
 // Return nonnull if cast successful.
@@ -162,7 +164,7 @@ template <typename BpType, typename IType = typename BpType::Pure,
 sp<IType> getServiceInternal(const std::string& instance, bool retry, bool getStub) {
     using ::android::hidl::base::V1_0::IBase;
 
-    sp<IBase> base = getRawServiceInternal(IType::descriptor, instance, retry, getStub);
+    sp<IBase> base = getRawServiceInternal(IType::getDescriptorName(), instance, retry, getStub);
 
     if (base == nullptr) {
         return nullptr;

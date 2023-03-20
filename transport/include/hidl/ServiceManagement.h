@@ -23,6 +23,8 @@
 #include <android/hidl/base/1.0/IBase.h>
 #include <utils/StrongPointer.h>
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 
 namespace hidl {
@@ -45,13 +47,13 @@ namespace details {
 
 // Will not attempt to start a lazy HAL
 // e.x.: android.hardware.foo@1.0::IFoo, default
-void waitForHwService(const std::string &interface, const std::string &instanceName);
+LIBHIDL_EXPORT void waitForHwService(const std::string &interface, const std::string &instanceName);
 
 // Only works on userdebug/eng builds. This allows getService to bypass the
 // VINTF manifest for testing only.
-void setTrebleTestingOverride(bool testingOverride);
+LIBHIDL_EXPORT void setTrebleTestingOverride(bool testingOverride);
 
-void preloadPassthroughService(const std::string &descriptor);
+LIBHIDL_EXPORT void preloadPassthroughService(const std::string &descriptor);
 
 // Returns a service with the following constraints:
 // - retry => service is waited for and returned if it is declared in the
@@ -62,21 +64,21 @@ void preloadPassthroughService(const std::string &descriptor);
 // TODO(b/65843592)
 // If the service is a remote service, this function returns BpBase. If the service is
 // a passthrough service, this function returns the appropriately wrapped Bs child object.
-sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
+LIBHIDL_EXPORT sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
                                                              const std::string& instance,
                                                              bool retry, bool getStub);
 
-status_t registerAsServiceInternal(const sp<::android::hidl::base::V1_0::IBase>& service,
+LIBHIDL_EXPORT status_t registerAsServiceInternal(const sp<::android::hidl::base::V1_0::IBase>& service,
                                    const std::string& name);
 }  // namespace details
 
 // These functions are for internal use by hidl. If you want to get ahold
 // of an interface, the best way to do this is by calling IFoo::getService()
-sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
-sp<::android::hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1();
-sp<::android::hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2();
-sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
-sp<::android::hidl::manager::V1_1::IServiceManager> getPassthroughServiceManager1_1();
+LIBHIDL_EXPORT sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
+LIBHIDL_EXPORT sp<::android::hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1();
+LIBHIDL_EXPORT sp<::android::hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2();
+LIBHIDL_EXPORT sp<::android::hidl::manager::V1_0::IServiceManager> getPassthroughServiceManager();
+LIBHIDL_EXPORT sp<::android::hidl::manager::V1_1::IServiceManager> getPassthroughServiceManager1_1();
 
 /**
  * Given a descriptor (e.g. from IFoo::descriptor), return a list of all instance names
@@ -84,7 +86,7 @@ sp<::android::hidl::manager::V1_1::IServiceManager> getPassthroughServiceManager
  * the expectation is that if they aren't running, they should start as lazy HALs.
  * So, getService should return for each of these instance names.
  */
-std::vector<std::string> getAllHalInstanceNames(const std::string& descriptor);
+LIBHIDL_EXPORT std::vector<std::string> getAllHalInstanceNames(const std::string& descriptor);
 
 /**
  * Given a service that is in passthrough mode, this function will go ahead and load the

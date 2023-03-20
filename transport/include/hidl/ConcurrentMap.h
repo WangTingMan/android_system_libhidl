@@ -19,6 +19,8 @@
 #include <mutex>
 #include <map>
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 namespace hardware {
 

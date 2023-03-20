@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define _CRT_NONSTDC_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <hidl/HidlTransportSupport.h>
 
 #include <hidl/HidlBinderSupport.h>
@@ -20,8 +23,6 @@
 
 #include <android-base/logging.h>
 #include <android/hidl/manager/1.0/IServiceManager.h>
-
-#include <linux/sched.h>
 
 namespace android {
 namespace hardware {
@@ -65,6 +66,8 @@ bool setMinSchedulerPolicy(const sp<IBase>& service, int policy, int priority) {
         return false;
     }
 
+#ifdef _MSC_VER
+#else
     switch (policy) {
         case SCHED_NORMAL: {
             if (priority < -20 || priority > 19) {
@@ -84,6 +87,7 @@ bool setMinSchedulerPolicy(const sp<IBase>& service, int policy, int priority) {
             return false;
         }
     }
+#endif
 
     // Due to ABI considerations, IBase cannot have a destructor to clean this up.
     // So, because this API is so infrequently used, (expected to be usually only
@@ -96,7 +100,11 @@ bool setMinSchedulerPolicy(const sp<IBase>& service, int policy, int priority) {
 }
 
 SchedPrio getMinSchedulerPolicy(const sp<IBase>& service) {
-    return details::gServicePrioMap->get(service, {SCHED_NORMAL, 0});
+    int pro = 0;
+#ifndef _MSC_VER
+    pro = SCHED_NORMAL;
+#endif
+    return details::gServicePrioMap->get(service, { pro, 0});
 }
 
 bool setRequestingSid(const sp<IBase>& service, bool requesting) {

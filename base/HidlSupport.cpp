@@ -15,12 +15,19 @@
  */
 #define LOG_TAG "HidlSupport"
 
+#define _CRT_NONSTDC_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <hidl/HidlSupport.h>
 
 #include <unordered_map>
 
 #include <android-base/logging.h>
 #include <android-base/parseint.h>
+
+#ifdef _WIN32
+#include <corecrt_io.h>
+#endif
 
 namespace android {
 namespace hardware {

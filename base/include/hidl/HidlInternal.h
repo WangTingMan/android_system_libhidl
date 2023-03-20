@@ -18,11 +18,17 @@
 #define ANDROID_HIDL_INTERNAL_H
 
 #include <cstdint>
-#include <dirent.h>
 #include <functional>
 #include <string>
 #include <vector>
 #include <utility>
+#include <filesystem>
+
+#include <hwbinder/libhidl_export.h>
+
+#ifdef interface
+#undef interface
+#endif
 
 namespace android {
 namespace hardware {
@@ -42,13 +48,13 @@ struct bs_tag {};
 
 //Templated classes can use the below method
 //to avoid creating dependencies on liblog.
-void logAlwaysFatal(const char *message);
+LIBHIDL_EXPORT void logAlwaysFatal(const char *message);
 
 // Returns VNDK-SP hw path according to "ro.vndk.version"
 #if defined(__LP64__)
 std::string getVndkSpHwPath(const char* lib = "lib64");
 #else
-std::string getVndkSpHwPath(const char* lib = "lib");
+LIBHIDL_EXPORT std::string getVndkSpHwPath(const char* lib = "lib");
 #endif
 
 // Explicitly invokes the parameterized element's destructor;
@@ -136,7 +142,7 @@ private:
 
 // ----------------------------------------------------------------------
 // Class that provides Hidl instrumentation utilities.
-struct HidlInstrumentor {
+struct LIBHIDL_EXPORT HidlInstrumentor {
     // Event that triggers the instrumentation. e.g. enter of an API call on
     // the server/client side, exit of an API call on the server/client side
     // etc.
@@ -196,7 +202,7 @@ struct HidlInstrumentor {
 
     // Utility function to determine whether a give file is a instrumentation
     // library (i.e. the file name follow the expected pattern).
-    bool isInstrumentationLib(const dirent *file);
+    bool isInstrumentationLib( const std::filesystem::path& file );
 
     // A list of registered instrumentation callbacks.
     std::vector<InstrumentationCallback> mInstrumentationCallbacks;
@@ -212,10 +218,14 @@ struct HidlInstrumentor {
 
 };
 
+#ifndef _MSC_VER
+
 #ifdef __LP64__
 static_assert(sizeof(HidlInstrumentor) == 88, "HidlInstrumentor size frozen by prebuilts");
 #else
 static_assert(sizeof(HidlInstrumentor) == 44, "HidlInstrumentor size frozen by prebuilts");
+#endif
+
 #endif
 
 }  // namespace details

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 #define LOG_TAG "HidlServiceManagement"
 
 #ifdef __ANDROID__
@@ -21,15 +21,20 @@
 #endif  // __ANDROID__
 
 #include <condition_variable>
+#ifndef _MSC_VER
 #include <dlfcn.h>
 #include <dirent.h>
 #include <fstream>
 #include <pthread.h>
 #include <unistd.h>
+#endif
 
 #include <mutex>
 #include <regex>
 #include <set>
+#include <fstream>
+#include <thread>
+#include <chrono>
 
 #include <hidl/HidlBinderSupport.h>
 #include <hidl/HidlInternal.h>
@@ -53,6 +58,15 @@
 #include <android/hidl/manager/1.2/BnHwServiceManager.h>
 #include <android/hidl/manager/1.2/BpHwServiceManager.h>
 #include <android/hidl/manager/1.2/IServiceManager.h>
+
+#ifdef _MSC_VER
+#ifdef ERROR
+#undef ERROR
+#endif
+#ifdef interface
+#undef interface
+#endif
+#endif
 
 using ::android::hidl::base::V1_0::IBase;
 using IServiceManager1_0 = android::hidl::manager::V1_0::IServiceManager;
@@ -127,6 +141,9 @@ __attribute__((noinline)) static void tryShortenProcessName(const std::string& d
     std::string newName = processName.substr(secondDot + 1, std::string::npos);
     ALOGI("Removing namespace from process name %s to %s.", processName.c_str(), newName.c_str());
 
+#ifdef _MSC_VER
+    ALOGE( "PORTING work not done" );
+#else
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(kTasks.c_str()), closedir);
     if (dir == nullptr) return;
 
@@ -150,6 +167,7 @@ __attribute__((noinline)) static void tryShortenProcessName(const std::string& d
             fs << newName;
         }
     }
+#endif
 }
 
 namespace details {
@@ -207,7 +225,12 @@ static bool isServiceManager(const hidl_string& fqName) {
            fqName == IServiceManager1_2::descriptor;
 }
 static bool isHwServiceManagerInstalled() {
+#ifdef _MSC_VER  
+    ALOGE( "PORTING work not done" );
+    return false;
+#else
     return access("/system/bin/hwservicemanager", F_OK) == 0;
+#endif
 }
 
 /*
@@ -323,7 +346,9 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
             gDefaultServiceManager = sp<NoHwServiceManager>::make();
             return gDefaultServiceManager;
         }
-
+#ifdef _MSC_VER
+        ALOGE( "PORTING work not done" );
+#else
         if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
             // HwBinder not available on this device or not accessible to
             // this process.
@@ -341,6 +366,7 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
                 sleep(1);
             }
         }
+#endif
     }
 
     return gDefaultServiceManager;
@@ -348,10 +374,13 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
 
 static std::vector<std::string> findFiles(const std::string& path, const std::string& prefix,
                                           const std::string& suffix) {
+    std::vector<std::string> results{};
+#ifdef _MSC_VER
+    ALOGE( "PORTING work not done" );
+#else
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
     if (!dir) return {};
 
-    std::vector<std::string> results{};
 
     dirent* dp;
     while ((dp = readdir(dir.get())) != nullptr) {
@@ -361,7 +390,7 @@ static std::vector<std::string> findFiles(const std::string& path, const std::st
             results.push_back(name);
         }
     }
-
+#endif
     return results;
 }
 
@@ -410,7 +439,9 @@ using InstanceDebugInfo = hidl::manager::V1_0::IServiceManager::InstanceDebugInf
 static inline void fetchPidsForPassthroughLibraries(
     std::map<std::string, InstanceDebugInfo>* infos) {
     static const std::string proc = "/proc/";
-
+#ifdef _MSC_VER  
+    ALOGE( "PORTING work not done" );
+#else
     std::map<std::string, std::set<pid_t>> pids;
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(proc.c_str()), closedir);
     if (!dir) return;
@@ -442,6 +473,7 @@ static inline void fetchPidsForPassthroughLibraries(
         pair.second.clientPids =
             std::vector<pid_t>{pids[pair.first].begin(), pids[pair.first].end()};
     }
+#endif
 }
 
 struct PassthroughServiceManager : IServiceManager1_1 {
@@ -463,7 +495,9 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 
         const std::string prefix = packageAndVersion + "-impl";
         const std::string sym = "HIDL_FETCH_" + ifaceName;
-
+#ifdef _MSC_VER
+        ALOGE( "PORTING work not done" );
+#else
         constexpr int dlMode = RTLD_LAZY;
         void* handle = nullptr;
 
@@ -515,6 +549,7 @@ struct PassthroughServiceManager : IServiceManager1_1 {
                 }
             }
         }
+#endif
     }
 
     Return<sp<IBase>> get(const hidl_string& fqName,
@@ -526,7 +561,10 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         if (!isHwServiceManagerInstalled() && isServiceManager(fqName)) {
             return defaultServiceManager1_2();
         }
+#ifdef _MSC_VER
 
+        ALOGE( "PORTING work not done" );
+#else
         openLibs(fqName, [&](void* handle, const std::string &lib, const std::string &sym) {
             IBase* (*generator)(const char* name);
             *(void **)(&generator) = dlsym(handle, sym.c_str());
@@ -563,7 +601,7 @@ struct PassthroughServiceManager : IServiceManager1_1 {
             registerReference(actualFqName, name);
             return false;
         });
-
+#endif
         return ret;
     }
 
@@ -760,7 +798,7 @@ struct Waiter : IServiceNotification {
         if (!mRegisteredForNotifications) {
             // As an alternative, just sleep for a second and return
             LOG(WARNING) << "Waiting one second for " << mInterfaceName << "/" << mInstanceName;
-            sleep(1);
+            std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
             return;
         }
 
@@ -891,7 +929,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
               "enable PRODUCT_ENFORCE_VINTF_MANIFEST on this device (this is also enabled by "
               "PRODUCT_FULL_TREBLE). PRODUCT_ENFORCE_VINTF_MANIFEST will ensure that no race "
               "condition is possible here.");
-        sleep(1);
+        std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
     }
 
     for (int tries = 0; !getStub && (vintfHwbinder || vintfLegacy); tries++) {

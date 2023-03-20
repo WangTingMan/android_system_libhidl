@@ -77,7 +77,7 @@ void HidlInstrumentor::registerInstrumentationCallbacks(
     return;
 }
 
-bool HidlInstrumentor::isInstrumentationLib(const dirent *file) {
+bool HidlInstrumentor::isInstrumentationLib( const std::filesystem::path& file ) {
     (void) file;
     return false;
 }

@@ -18,10 +18,11 @@
 
 #include <hidl/HidlLazyUtils.h>
 #include <hidl/HidlTransportSupport.h>
-#include <sys/wait.h>
 #include <utils/Errors.h>
 #include <utils/Log.h>
 #include <utils/StrongPointer.h>
+
+#include <hwbinder/libhidl_export.h>
 
 #pragma once
 
@@ -32,7 +33,7 @@ namespace details {
 using RegisterServiceCb =
         std::function<status_t(const sp<::android::hidl::base::V1_0::IBase>&, const std::string&)>;
 
-__attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
+__attribute__((warn_unused_result)) LIBHIDL_EXPORT status_t registerPassthroughServiceImplementation(
         const std::string& interfaceName, const std::string& expectInterfaceName,
         RegisterServiceCb registerServiceCb, const std::string& serviceName = "default");
 
@@ -41,7 +42,7 @@ __attribute__((warn_unused_result)) status_t registerPassthroughServiceImplement
 /**
  * Registers passthrough service implementation.
  */
-__attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
+__attribute__((warn_unused_result)) LIBHIDL_EXPORT status_t registerPassthroughServiceImplementation(
         const std::string& interfaceName, const std::string& expectInterfaceName,
         const std::string& serviceName);
 
@@ -53,8 +54,8 @@ inline __attribute__((warn_unused_result)) status_t registerPassthroughServiceIm
 template <class Interface, class ExpectInterface = Interface>
 __attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
         const std::string& name = "default") {
-    return registerPassthroughServiceImplementation(Interface::descriptor,
-                                                    ExpectInterface::descriptor, name);
+    return registerPassthroughServiceImplementation(Interface::GetDescriptor(),
+                                                    ExpectInterface::GetDescriptor(), name);
 }
 
 /**

@@ -31,7 +31,7 @@ Return<bool> canCastInterface(IBase* interface, const char* castTo, bool emitErr
 
     // b/68217907
     // Every HIDL interface is a base interface.
-    if (std::string(IBase::descriptor) == castTo) {
+    if (std::string(IBase::getDescriptorName()) == castTo) {
         return true;
     }
 

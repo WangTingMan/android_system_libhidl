@@ -39,6 +39,8 @@
 #include <utils/StrongPointer.h>
 #pragma clang diagnostic pop
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 
 // this file is included by all hidl interface, so we must forward declare the
@@ -67,7 +69,7 @@ namespace hardware {
 
 namespace details {
 // Return true on userdebug / eng builds and false on user builds.
-bool debuggable();
+LIBHIDL_EXPORT bool debuggable();
 } //  namespace details
 
 // hidl_death_recipient is a callback interfaced that can be used with
@@ -94,7 +96,7 @@ struct hidl_death_recipient : public virtual RefBase {
 //    // copy and its enclosed file descriptors will remain valid here.
 // 3) The move constructor does what you would expect; it only owns the handle if the
 //    original did.
-struct hidl_handle {
+struct LIBHIDL_EXPORT hidl_handle {
     hidl_handle();
     ~hidl_handle();
 
@@ -134,7 +136,7 @@ private:
     uint8_t mPad[7];
 };
 
-struct hidl_string {
+struct LIBHIDL_EXPORT hidl_string {
     hidl_string();
     ~hidl_string();
 
@@ -212,7 +214,7 @@ HIDL_STRING_OPERATOR(>=)
 #undef HIDL_STRING_OPERATOR
 
 // Send our content to the output stream
-std::ostream& operator<<(std::ostream& os, const hidl_string& str);
+LIBHIDL_EXPORT std::ostream& operator<<(std::ostream& os, const hidl_string& str);
 
 
 // hidl_memory is a structure that can be used to transfer
@@ -220,7 +222,7 @@ std::ostream& operator<<(std::ostream& os, const hidl_string& str);
 // of this object is that the memory remains accessible as
 // long as the file descriptors in the enclosed mHandle
 // - as well as all of its cross-process dups() - remain opened.
-struct hidl_memory {
+struct LIBHIDL_EXPORT hidl_memory {
 
     hidl_memory() : mHandle(nullptr), mSize(0), mName("") {
     }
@@ -311,7 +313,7 @@ private:
 // provides factory methods to create an instance from hidl_memory or
 // from a opened file descriptor. The number of factory methods can be increase
 // to support other type of hidl_memory without break the ABI.
-class HidlMemory : public virtual hidl_memory, public virtual ::android::RefBase {
+class LIBHIDL_EXPORT HidlMemory : public virtual hidl_memory, public virtual ::android::RefBase {
 public:
     static sp<HidlMemory> getInstance(const hidl_memory& mem);
 
@@ -914,7 +916,7 @@ inline android::hardware::hidl_version make_hidl_version(uint16_t major, uint16_
 
 ///////////////////// toString functions
 
-std::string toString(const void *t);
+LIBHIDL_EXPORT std::string toString(const void *t);
 
 // toString alias for numeric types
 template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>

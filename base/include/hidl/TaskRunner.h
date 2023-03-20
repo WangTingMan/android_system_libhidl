@@ -18,6 +18,9 @@
 
 #include <memory>
 #include <thread>
+#include <functional>
+
+#include <hwbinder/libhidl_export.h>
 
 namespace android {
 namespace hardware {
@@ -32,7 +35,7 @@ struct SynchronizedQueue;
  * A background infinite loop that runs the Tasks push()'ed.
  * Equivalent to a simple single-threaded Looper.
  */
-class TaskRunner {
+class LIBHIDL_EXPORT TaskRunner {
 public:
 
     /* Create an empty task runner. Nothing will be done until start() is called. */

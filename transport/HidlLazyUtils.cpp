@@ -126,7 +126,7 @@ ClientCounterCallback::Service& ClientCounterCallback::assertRegisteredServiceLo
     }
     LOG(FATAL) << "Got callback on service " << getDescriptor(service.get())
                << " which we did not register.";
-    __builtin_unreachable();
+    //__builtin_unreachable();
 }
 
 bool ClientCounterCallback::registerServiceLocked(const sp<IBase>& service,

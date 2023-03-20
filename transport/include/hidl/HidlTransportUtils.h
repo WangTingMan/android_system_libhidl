@@ -19,6 +19,8 @@
 
 #include <android/hidl/base/1.0/IBase.h>
 
+#include <hwbinder/libhidl_export.h>
+
 namespace android {
 namespace hardware {
 namespace details {
@@ -28,10 +30,10 @@ namespace details {
  * @param emitError if emitError is false, return Return<bool>{false} on error; if emitError
  * is true, the Return<bool> object contains the actual error.
  */
-Return<bool> canCastInterface(::android::hidl::base::V1_0::IBase* interface,
+LIBHIDL_EXPORT Return<bool> canCastInterface(::android::hidl::base::V1_0::IBase* interface,
         const char* castTo, bool emitError = false);
 
-std::string getDescriptor(::android::hidl::base::V1_0::IBase* interface);
+LIBHIDL_EXPORT std::string getDescriptor(::android::hidl::base::V1_0::IBase* interface);
 
 }   // namespace details
 }   // namespace hardware

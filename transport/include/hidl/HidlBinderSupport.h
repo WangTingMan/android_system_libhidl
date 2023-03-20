@@ -28,6 +28,8 @@
 #include <hwbinder/Parcel.h>
 #include <log/log.h>  // TODO(b/65843592): remove. Too many users depending on this transitively.
 
+#include <hwbinder/libhidl_export.h>
+
 // Defines functions for hidl_string, Status, hidl_vec, MQDescriptor,
 // etc. to interact with Parcel.
 
@@ -37,7 +39,7 @@ namespace hardware {
 // hidl_binder_death_recipient wraps a transport-independent
 // hidl_death_recipient, and implements the binder-specific
 // DeathRecipient interface.
-struct hidl_binder_death_recipient : IBinder::DeathRecipient {
+struct LIBHIDL_EXPORT hidl_binder_death_recipient : IBinder::DeathRecipient {
     hidl_binder_death_recipient(const sp<hidl_death_recipient> &recipient,
             uint64_t cookie, const sp<::android::hidl::base::V1_0::IBase> &base);
     virtual void binderDied(const wp<IBinder>& /*who*/);
@@ -50,34 +52,34 @@ private:
 
 // ---------------------- hidl_handle
 
-status_t readEmbeddedFromParcel(const hidl_handle &handle,
+LIBHIDL_EXPORT status_t readEmbeddedFromParcel(const hidl_handle &handle,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset);
 
-status_t writeEmbeddedToParcel(const hidl_handle &handle,
+LIBHIDL_EXPORT status_t writeEmbeddedToParcel(const hidl_handle &handle,
         Parcel *parcel, size_t parentHandle, size_t parentOffset);
 
 // ---------------------- hidl_memory
 
-status_t readEmbeddedFromParcel(const hidl_memory &memory,
+LIBHIDL_EXPORT status_t readEmbeddedFromParcel(const hidl_memory &memory,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset);
 
-status_t writeEmbeddedToParcel(const hidl_memory &memory,
+LIBHIDL_EXPORT status_t writeEmbeddedToParcel(const hidl_memory &memory,
         Parcel *parcel, size_t parentHandle, size_t parentOffset);
 
 // ---------------------- hidl_string
 
-status_t readEmbeddedFromParcel(const hidl_string &string,
+LIBHIDL_EXPORT status_t readEmbeddedFromParcel(const hidl_string &string,
         const Parcel &parcel, size_t parentHandle, size_t parentOffset);
 
-status_t writeEmbeddedToParcel(const hidl_string &string,
+LIBHIDL_EXPORT status_t writeEmbeddedToParcel(const hidl_string &string,
         Parcel *parcel, size_t parentHandle, size_t parentOffset);
 
 // ---------------------- Status
 
 // Bear in mind that if the client or service is a Java endpoint, this
 // is not the logic which will provide/interpret the data here.
-status_t readFromParcel(Status *status, const Parcel& parcel);
-status_t writeToParcel(const Status &status, Parcel* parcel);
+LIBHIDL_EXPORT status_t readFromParcel(Status *status, const Parcel& parcel);
+LIBHIDL_EXPORT status_t writeToParcel(const Status &status, Parcel* parcel);
 
 // ---------------------- hidl_vec
 
@@ -182,7 +184,7 @@ template<typename T, MQFlavor flavor>
 
 // Constructs a binder for this interface and caches it. If it has already been created
 // then it returns it.
-sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr);
+LIBHIDL_EXPORT sp<IBinder> getOrCreateCachedBinder(::android::hidl::base::V1_0::IBase* ifacePtr);
 
 // Construct a smallest possible binder from the given interface.
 // If it is remote, then its remote() will be retrieved.
@@ -210,24 +212,24 @@ sp<IType> fromBinder(const sp<IBinder>& binderIface) {
     }
 
     // Ensure that IBinder is BnHwBase (not JHwBinder, for instance)
-    if (!binderIface->checkSubclass(IBase::descriptor)) {
+    if (!binderIface->checkSubclass(IBase::getDescriptorName())) {
         return new ProxyType(binderIface);
     }
     sp<IBase> base = static_cast<BnHwBase*>(binderIface.get())->getImpl();
 
-    if (details::canCastInterface(base.get(), IType::descriptor)) {
+    if (details::canCastInterface(base.get(), IType::getDescriptorName())) {
         return static_cast<IType*>(base.get());
     } else {
         return nullptr;
     }
 }
 
-void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin);
-void joinBinderRpcThreadpool();
-int setupBinderPolling();
-status_t handleBinderPoll();
+LIBHIDL_EXPORT void configureBinderRpcThreadpool(size_t maxThreads, bool callerWillJoin);
+LIBHIDL_EXPORT void joinBinderRpcThreadpool();
+LIBHIDL_EXPORT int setupBinderPolling();
+LIBHIDL_EXPORT status_t handleBinderPoll();
 
-void addPostCommandTask(const std::function<void(void)> task);
+LIBHIDL_EXPORT void addPostCommandTask(const std::function<void(void)> task);
 
 }  // namespace hardware
 }  // namespace android
