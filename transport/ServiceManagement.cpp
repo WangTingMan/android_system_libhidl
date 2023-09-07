@@ -142,7 +142,7 @@ __attribute__((noinline)) static void tryShortenProcessName(const std::string& d
     ALOGI("Removing namespace from process name %s to %s.", processName.c_str(), newName.c_str());
 
 #ifdef _MSC_VER
-    ALOGE( "PORTING work not done" );
+    ALOGI( "Ignore this feature." );
 #else
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(kTasks.c_str()), closedir);
     if (dir == nullptr) return;
@@ -225,9 +225,9 @@ static bool isServiceManager(const hidl_string& fqName) {
            fqName == IServiceManager1_2::descriptor;
 }
 static bool isHwServiceManagerInstalled() {
-#ifdef _MSC_VER  
-    ALOGE( "PORTING work not done" );
-    return false;
+#ifdef _MSC_VER
+    ALOGI( "We always treat it as OK" );
+    return true;
 #else
     return access("/system/bin/hwservicemanager", F_OK) == 0;
 #endif
@@ -346,15 +346,13 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
             gDefaultServiceManager = sp<NoHwServiceManager>::make();
             return gDefaultServiceManager;
         }
-#ifdef _MSC_VER
-        ALOGE( "PORTING work not done" );
-#else
+#ifndef _MSC_VER
         if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
             // HwBinder not available on this device or not accessible to
             // this process.
             return nullptr;
         }
-
+#endif
         waitForHwServiceManager();
 
         while (gDefaultServiceManager == nullptr) {
@@ -363,10 +361,13 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
                     ProcessState::self()->getContextObject(nullptr));
             if (gDefaultServiceManager == nullptr) {
                 LOG(ERROR) << "Waited for hwservicemanager, but got nullptr.";
+#ifdef _MSC_VER
+                std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+#else
                 sleep(1);
+#endif
             }
         }
-#endif
     }
 
     return gDefaultServiceManager;
