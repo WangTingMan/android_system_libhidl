@@ -60,6 +60,15 @@
 #include <android/hidl/manager/1.2/IServiceManager.h>
 
 #ifdef _MSC_VER
+#include <base/native_library.h>
+#include <base/files/file_path.h>
+#include <binder_driver/ipc_connection_token.h>
+#ifdef PASSTHROUGH // remove windows header defined PASSTHROUGH
+#undef PASSTHROUGH
+#endif
+#endif
+
+#ifdef _MSC_VER
 #ifdef ERROR
 #undef ERROR
 #endif
@@ -377,7 +386,9 @@ static std::vector<std::string> findFiles(const std::string& path, const std::st
                                           const std::string& suffix) {
     std::vector<std::string> results{};
 #ifdef _MSC_VER
-    ALOGE( "PORTING work not done" );
+    std::string file_name( prefix );
+    file_name.append( suffix );
+    results.push_back( file_name );
 #else
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
     if (!dir) return {};
@@ -432,7 +443,7 @@ static void registerReference(const hidl_string &interfaceName, const hidl_strin
                      << ": " << ret.description();
         return;
     }
-    LOG(VERBOSE) << "Successfully registerReference for "
+    LOG(INFO) << "Successfully registerReference for "
                  << interfaceName << "/" << instanceName;
 }
 
@@ -480,7 +491,7 @@ static inline void fetchPidsForPassthroughLibraries(
 struct PassthroughServiceManager : IServiceManager1_1 {
     static void openLibs(
         const std::string& fqName,
-        const std::function<bool /* continue */ (void* /* handle */, const std::string& /* lib */,
+        const std::function<bool /* continue */ ( ::base::NativeLibrary /* handle */, const std::string& /* lib */,
                                                  const std::string& /* sym */)>& eachLib) {
         //fqName looks like android.hardware.foo@1.0::IFoo
         size_t idx = fqName.find("::");
@@ -497,12 +508,13 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         const std::string prefix = packageAndVersion + "-impl";
         const std::string sym = "HIDL_FETCH_" + ifaceName;
 #ifdef _MSC_VER
-        ALOGE( "PORTING work not done" );
+        ::base::NativeLibrary handle = NULL;
 #else
         constexpr int dlMode = RTLD_LAZY;
         void* handle = nullptr;
 
         dlerror(); // clear
+#endif
 
         static std::string halLibPathVndkSp = details::getVndkSpHwPath();
         std::vector<std::string> paths = {
@@ -513,7 +525,10 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         };
 
         if (details::isTrebleTestingOverride()) {
-            // Load HAL implementations that are statically linked
+            // Load HAL implementations that are statically linked 
+#ifdef _MSC_VER
+            LOG( ERROR ) << "We do not support lookup symbol locally.";
+#else
             handle = dlopen(nullptr, dlMode);
             if (handle == nullptr) {
                 const char* error = dlerror();
@@ -522,6 +537,7 @@ struct PassthroughServiceManager : IServiceManager1_1 {
             } else if (!eachLib(handle, "SELF", sym)) {
                 return;
             }
+#endif
         }
 
         for (const std::string& path : paths) {
@@ -529,7 +545,10 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 
             for (const std::string &lib : libs) {
                 const std::string fullPath = path + lib;
-
+#ifdef _MSC_VER
+                ::base::NativeLibraryLoadError _lib_error;
+                handle = ::base::LoadNativeLibrary( lib, &_lib_error );
+#else
                 if (kIsRecovery || path == HAL_LIBRARY_PATH_SYSTEM) {
                     handle = dlopen(fullPath.c_str(), dlMode);
                 } else {
@@ -537,9 +556,16 @@ struct PassthroughServiceManager : IServiceManager1_1 {
                     handle = android_load_sphal_library(fullPath.c_str(), dlMode);
 #endif
                 }
+#endif
 
                 if (handle == nullptr) {
+#ifdef _MSC_VER
+                    const char* error = nullptr;
+                    std::string error_str = _lib_error.ToString();
+                    error = error_str.c_str();
+#else
                     const char* error = dlerror();
+#endif
                     LOG(ERROR) << "Failed to dlopen " << lib << ": "
                                << (error == nullptr ? "unknown error" : error);
                     continue;
@@ -550,7 +576,6 @@ struct PassthroughServiceManager : IServiceManager1_1 {
                 }
             }
         }
-#endif
     }
 
     Return<sp<IBase>> get(const hidl_string& fqName,
@@ -562,15 +587,22 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         if (!isHwServiceManagerInstalled() && isServiceManager(fqName)) {
             return defaultServiceManager1_2();
         }
-#ifdef _MSC_VER
 
-        ALOGE( "PORTING work not done" );
-#else
-        openLibs(fqName, [&](void* handle, const std::string &lib, const std::string &sym) {
+        openLibs(fqName, [&]( ::base::NativeLibrary handle, const std::string &lib, const std::string &sym) {
             IBase* (*generator)(const char* name);
+#ifdef _MSC_VER
+            auto p_fun = ::base::GetFunctionPointerFromNativeLibrary( handle, sym );
+            typedef IBase* (*generator_type)( const char* name );
+            generator = reinterpret_cast<generator_type>( p_fun );
+#else
             *(void **)(&generator) = dlsym(handle, sym.c_str());
+#endif
             if(!generator) {
+#ifdef _MSC_VER
+                const char* error = nullptr;
+#else
                 const char* error = dlerror();
+#endif
                 LOG(ERROR) << "Passthrough lookup opened " << lib << " but could not find symbol "
                            << sym << ": " << (error == nullptr ? "unknown error" : error)
                            << ". Keeping library open.";
@@ -602,7 +634,7 @@ struct PassthroughServiceManager : IServiceManager1_1 {
             registerReference(actualFqName, name);
             return false;
         });
-#endif
+
         return ret;
     }
 
@@ -917,6 +949,11 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
         transport = transportRet;
     }
 
+#ifdef _MSC_VER
+    transport = Transport::HWBINDER;
+    ALOGI( "Force use BINDER hidl" );
+#endif
+
     const bool vintfHwbinder = (transport == Transport::HWBINDER);
     const bool vintfPassthru = (transport == Transport::PASSTHROUGH);
     const bool trebleTestingOverride = isTrebleTestingOverride();
@@ -930,7 +967,9 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
               "enable PRODUCT_ENFORCE_VINTF_MANIFEST on this device (this is also enabled by "
               "PRODUCT_FULL_TREBLE). PRODUCT_ENFORCE_VINTF_MANIFEST will ensure that no race "
               "condition is possible here.");
+#ifndef _MSC_VER
         std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+#endif
     }
 
     for (int tries = 0; !getStub && (vintfHwbinder || vintfLegacy); tries++) {
@@ -963,6 +1002,10 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
 
         // In case of legacy or we were not asked to retry, don't.
         if (vintfLegacy || !retry) break;
+
+#ifdef _MSC_VER
+        break;
+#endif
 
         if (waiter != nullptr) {
             ALOGI("getService: Trying again for %s/%s...", descriptor.c_str(), instance.c_str());
@@ -1021,6 +1064,14 @@ status_t registerAsServiceInternal(const sp<IBase>& service, const std::string& 
     Return<void> ret = service->interfaceChain([&](const auto& chain) {
         registered = sm->addWithChain(name.c_str(), service, chain).withDefault(false);
     });
+
+#ifdef _MSC_VER
+    auto binder_ = getOrCreateCachedBinder( service.get() );
+    std::string chain_name{ descriptor };
+    chain_name.push_back( ::android::ipc_connection_token_mgr::s_name_separator );
+    chain_name.append( name );
+    ::android::ipc_connection_token_mgr::get_instance().add_local_service( chain_name, binder_ );
+#endif
 
     if (!ret.isOk()) {
         LOG(ERROR) << "Could not retrieve interface chain: " << ret.description();

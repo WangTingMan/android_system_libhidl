@@ -54,8 +54,8 @@ inline __attribute__((warn_unused_result)) status_t registerPassthroughServiceIm
 template <class Interface, class ExpectInterface = Interface>
 __attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
         const std::string& name = "default") {
-    return registerPassthroughServiceImplementation(Interface::GetDescriptor(),
-                                                    ExpectInterface::GetDescriptor(), name);
+    return registerPassthroughServiceImplementation(Interface::getDescriptorName(),
+                                                    ExpectInterface::getDescriptorName(), name);
 }
 
 /**
