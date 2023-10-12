@@ -159,7 +159,12 @@ MQDescriptor<T, flavor>& MQDescriptor<T, flavor>::operator=(const MQDescriptor& 
                 other.mHandle->numFds, other.mHandle->numInts);
 
         for (int i = 0; i < other.mHandle->numFds; ++i) {
+#ifdef _MSC_VER
+            mHandle->data[i] = ( other.mHandle->data[i] );
+            // this is fake native handle here. So cannot use _dup.
+#else
             mHandle->data[i] = _dup(other.mHandle->data[i]);
+#endif
         }
 
         memcpy(&mHandle->data[other.mHandle->numFds], &other.mHandle->data[other.mHandle->numFds],
