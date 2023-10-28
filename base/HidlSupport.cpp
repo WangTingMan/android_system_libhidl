@@ -312,7 +312,11 @@ sp<HidlMemory> HidlMemory::getInstance(const hidl_string& name, int fd, uint64_t
         LOG(ERROR) << "native_handle_create fails";
         return new HidlMemory();
     }
+#ifdef _MSC_VER
+    LOG( FATAL ) << "No implementation!";
+#else
     handle->data[0] = fd;
+#endif
 
     hidl_handle hidlHandle;
     hidlHandle.setTo(handle, true /* shouldOwn */);

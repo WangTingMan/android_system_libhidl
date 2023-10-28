@@ -21,6 +21,8 @@
 #include <unistd.h>
 #else
 #include <corecrt_io.h>
+#include <string>
+#include <fmq/system_porting.h>
 #endif
 
 #include <cutils/native_handle.h>
@@ -54,6 +56,30 @@ struct MQDescriptor {
 
     int32_t getFlags() const;
 
+#ifdef _MSC_VER
+    std::string toString()const
+    {
+        std::string str;
+        str = ::system_porting::generate_string( mGrantors, mHandle, mQuantum, mFlags, mName );
+        return str;
+    }
+
+    void fromString( std::string const& a_decriptor_str )
+    {
+        ::system_porting::from_string( a_decriptor_str, mGrantors, mHandle, mQuantum, mFlags, mName );
+    }
+
+    void setName( std::string const& a_name )
+    {
+        mName = a_name;
+    }
+
+    std::string const& getName()const noexcept
+    {
+        return mName;
+    }
+#endif
+
     bool isHandleValid() const { return mHandle != nullptr; }
     size_t countGrantors() const { return mGrantors.size(); }
 
@@ -77,6 +103,9 @@ private:
     ::android::hardware::details::hidl_pointer<native_handle_t> mHandle;
     uint32_t mQuantum;
     uint32_t mFlags;
+#ifdef _MSC_VER
+    std::string mName;
+#endif
 };
 
 template<typename T, MQFlavor flavor>
@@ -170,6 +199,10 @@ MQDescriptor<T, flavor>& MQDescriptor<T, flavor>::operator=(const MQDescriptor& 
         memcpy(&mHandle->data[other.mHandle->numFds], &other.mHandle->data[other.mHandle->numFds],
                static_cast<size_t>(other.mHandle->numInts) * sizeof(int));
     }
+
+#ifdef _MSC_VER
+    mName = other.mName;
+#endif
 
     return *this;
 }
