@@ -47,7 +47,7 @@ namespace details {
 
 // Will not attempt to start a lazy HAL
 // e.x.: android.hardware.foo@1.0::IFoo, default
-LIBHIDL_EXPORT void waitForHwService(const std::string &interface, const std::string &instanceName);
+LIBHIDL_EXPORT void waitForHwService(const std::string &interface_, const std::string &instanceName);
 
 // Only works on userdebug/eng builds. This allows getService to bypass the
 // VINTF manifest for testing only.
