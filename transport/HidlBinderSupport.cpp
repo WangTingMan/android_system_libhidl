@@ -153,6 +153,13 @@ status_t readEmbeddedFromParcel(const hidl_string &string ,
         return BAD_VALUE;
     }
 
+#ifdef _MSC_VER
+    hidl_string* hidl_str = const_cast<hidl_string*>(&string);
+    std::size_t string_size = string.size() + 1;
+    hidl_string temp_hidl_str;
+    memcpy(hidl_str, &temp_hidl_str, sizeof(hidl_string));
+    hidl_str->setToExternal(reinterpret_cast<const char*>(out), string_size);
+#endif
     return OK;
 }
 

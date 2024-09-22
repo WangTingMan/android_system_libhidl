@@ -91,12 +91,31 @@ status_t readEmbeddedFromParcel(
         size_t parentOffset,
         size_t *handle) {
     const void *out;
+#ifdef _MSC_VER
+    auto status = parcel.readNullableEmbeddedBuffer(
+        vec.size() * sizeof(T),
+        handle,
+        parentHandle,
+        parentOffset + hidl_vec<T>::kOffsetOfBuffer,
+        &out);
+    if (NO_ERROR == status)
+    {
+        size_t element_count = vec.size();
+        hidl_vec<T>* original_ptr = const_cast<hidl_vec<T>*>(&vec);
+        hidl_vec<T> temp_vec;
+        memcpy(original_ptr, &temp_vec, sizeof(hidl_vec<T>));
+        T* out_ptr = reinterpret_cast<T*>(const_cast<void*>(out));
+        original_ptr->setToExternal(out_ptr, element_count, false);
+    }
+    return status;
+#else
     return parcel.readNullableEmbeddedBuffer(
             vec.size() * sizeof(T),
             handle,
             parentHandle,
             parentOffset + hidl_vec<T>::kOffsetOfBuffer,
             &out);
+#endif
 }
 
 template<typename T>
