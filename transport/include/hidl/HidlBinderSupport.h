@@ -141,13 +141,15 @@ status_t findInParcel(const hidl_vec<T> &vec, const Parcel &parcel, size_t *hand
 // ---------------------- MQDescriptor
 
 template<typename T, MQFlavor flavor>
+#ifdef _MSC_VER
+[[deprecated( "obj.toString to write json version of MQ descriptor instead" )]]
+#endif
 ::android::status_t readEmbeddedFromParcel(
         MQDescriptor<T, flavor> &obj,
         const ::android::hardware::Parcel &parcel,
         size_t parentHandle,
         size_t parentOffset) {
     ::android::status_t _hidl_err = ::android::OK;
-
     size_t _hidl_grantors_child;
 
     _hidl_err = ::android::hardware::readEmbeddedFromParcel(
@@ -164,20 +166,21 @@ template<typename T, MQFlavor flavor>
             parentHandle,
             parentOffset + MQDescriptor<T, flavor>::kOffsetOfHandle,
             &_hidl_mq_handle_ptr);
-
     if (_hidl_err != ::android::OK) { return _hidl_err; }
 
     return _hidl_err;
 }
 
 template<typename T, MQFlavor flavor>
+#ifdef _MSC_VER
+[[deprecated( "read string and use obj.fromString to read json version of MQ descriptor instead" )]]
+#endif
 ::android::status_t writeEmbeddedToParcel(
         const MQDescriptor<T, flavor> &obj,
         ::android::hardware::Parcel *parcel,
         size_t parentHandle,
         size_t parentOffset) {
     ::android::status_t _hidl_err = ::android::OK;
-
     size_t _hidl_grantors_child;
 
     _hidl_err = ::android::hardware::writeEmbeddedToParcel(
@@ -193,7 +196,6 @@ template<typename T, MQFlavor flavor>
             obj.handle(),
             parentHandle,
             parentOffset + MQDescriptor<T, flavor>::kOffsetOfHandle);
-
     if (_hidl_err != ::android::OK) { return _hidl_err; }
 
     return _hidl_err;

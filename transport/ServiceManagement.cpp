@@ -60,9 +60,12 @@
 #include <android/hidl/manager/1.2/IServiceManager.h>
 
 #ifdef _MSC_VER
+#include <filesystem>
 #include <base/native_library.h>
 #include <base/files/file_path.h>
 #include <binder_driver/ipc_connection_token.h>
+#include <windows.h>
+#include <utils/direct.h>
 #ifdef PASSTHROUGH // remove windows header defined PASSTHROUGH
 #undef PASSTHROUGH
 #endif
@@ -386,10 +389,16 @@ static std::vector<std::string> findFiles(const std::string& path, const std::st
                                           const std::string& suffix) {
     std::vector<std::string> results{};
 #ifdef _MSC_VER
-    std::string file_name( prefix );
-    file_name.append( suffix );
-    results.push_back( file_name );
-#else
+    if( path.empty() )
+    {
+        std::string lib;
+        lib.append( prefix );
+        lib.append( suffix );
+        results.push_back( lib );
+        return results;
+    }
+#endif
+
     std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(path.c_str()), closedir);
     if (!dir) return {};
 
@@ -402,7 +411,6 @@ static std::vector<std::string> findFiles(const std::string& path, const std::st
             results.push_back(name);
         }
     }
-#endif
     return results;
 }
 
@@ -488,6 +496,19 @@ static inline void fetchPidsForPassthroughLibraries(
 #endif
 }
 
+#ifdef _MSC_VER
+std::string getModulePath()
+{
+    wchar_t module_name[MAX_PATH];
+    GetModuleFileName( nullptr, module_name, MAX_PATH );
+    ::base::FilePath path( module_name );
+    ::base::FilePath dir = path.DirName();
+    std::string dir_str = dir.StdStringValue();
+    dir_str.push_back( '/' );
+    return dir_str;
+}
+#endif
+
 struct PassthroughServiceManager : IServiceManager1_1 {
     static void openLibs(
         const std::string& fqName,
@@ -540,14 +561,25 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 #endif
         }
 
+#ifdef _MSC_VER
+        paths.clear();
+        paths.push_back( getModulePath() );
+        paths.push_back( std::string() );
+#endif
+
         for (const std::string& path : paths) {
             std::vector<std::string> libs = findFiles(path, prefix, ".so");
+
+#ifdef _MSC_VER
+            std::vector<std::string> dll_libs = findFiles( path, prefix, ".dll" );
+            libs.insert( libs.end(), dll_libs.begin(), dll_libs.end() );
+#endif
 
             for (const std::string &lib : libs) {
                 const std::string fullPath = path + lib;
 #ifdef _MSC_VER
                 ::base::NativeLibraryLoadError _lib_error;
-                handle = ::base::LoadNativeLibrary( lib, &_lib_error );
+                handle = ::base::LoadNativeLibrary( fullPath, &_lib_error );
 #else
                 if (kIsRecovery || path == HAL_LIBRARY_PATH_SYSTEM) {
                     handle = dlopen(fullPath.c_str(), dlMode);
@@ -568,7 +600,9 @@ struct PassthroughServiceManager : IServiceManager1_1 {
 #endif
                     LOG(ERROR) << "Failed to dlopen " << lib << ": "
                                << (error == nullptr ? "unknown error" : error);
+#ifndef _MSC_VER
                     continue;
+#endif
                 }
 
                 if (!eachLib(handle, lib, sym)) {
@@ -591,21 +625,36 @@ struct PassthroughServiceManager : IServiceManager1_1 {
         openLibs(fqName, [&]( ::base::NativeLibrary handle, const std::string &lib, const std::string &sym) {
             IBase* (*generator)(const char* name);
 #ifdef _MSC_VER
-            auto p_fun = ::base::GetFunctionPointerFromNativeLibrary( handle, sym );
-            typedef IBase* (*generator_type)( const char* name );
-            generator = reinterpret_cast<generator_type>( p_fun );
+            typedef IBase* ( *generator_type )( const char* name );
+            std::string detail_name = lib;
+            detail_name.push_back( ':' );
+            detail_name.append( sym );
+            // we try to load symbol locally first
+            generator = reinterpret_cast<generator_type>( dlsym( NULL, detail_name.c_str() ) );
+
+            if( generator == NULL)
+            {
+                auto p_fun = ::base::GetFunctionPointerFromNativeLibrary(handle, sym);
+                generator = reinterpret_cast<generator_type>(p_fun);
+            }
 #else
             *(void **)(&generator) = dlsym(handle, sym.c_str());
 #endif
             if(!generator) {
 #ifdef _MSC_VER
                 const char* error = nullptr;
+                if( handle )
+                {
+                    LOG( ERROR ) << "Passthrough lookup opened " << lib << " but could not find symbol "
+                        << sym << ": " << ( error == nullptr ? "unknown error" : error )
+                        << ". Keeping library open.";
+                }
 #else
                 const char* error = dlerror();
-#endif
                 LOG(ERROR) << "Passthrough lookup opened " << lib << " but could not find symbol "
                            << sym << ": " << (error == nullptr ? "unknown error" : error)
                            << ". Keeping library open.";
+#endif
 
                 // dlclose too problematic in multi-threaded environment
                 // dlclose(handle);
