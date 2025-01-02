@@ -164,7 +164,7 @@ template <typename BpType, typename IType = typename BpType::Pure,
 sp<IType> getServiceInternal(const std::string& instance, bool retry, bool getStub) {
     using ::android::hidl::base::V1_0::IBase;
 
-    sp<IBase> base = getRawServiceInternal(IType::getDescriptorName(), instance, retry, getStub);
+    sp<IBase> base = getRawServiceInternal(IType::descriptor, instance, retry, getStub);
 
     if (base == nullptr) {
         return nullptr;
