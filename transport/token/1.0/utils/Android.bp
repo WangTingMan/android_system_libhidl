@@ -32,9 +32,6 @@ cc_library {
             enabled: false,
         },
     },
-    vndk: {
-        enabled: true,
-    },
     double_loadable: true,
 
     srcs: [

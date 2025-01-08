@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package {
+    default_team: "trendy_team_android_kernel",
     // See: http://go/android-license-faq
     // A large-scale-change added 'default_applicable_licenses' to import
     // all of the 'license_kinds' from "system_libhidl_license"
@@ -37,9 +38,9 @@ cc_test {
         "liblog",
         "libutils",
         "libprotobuf-cpp-lite",
-        "libhidl-gen-utils",
     ],
     static_libs: [
+        "libhidl-gen-utils",
         "libinit_test_utils",
     ],
     test_suites: [

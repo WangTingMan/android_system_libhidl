@@ -12,10 +12,6 @@ package {
 hidl_interface {
     name: "android.hidl.safe_union@1.0",
     root: "android.hidl",
-    vndk: {
-        enabled: true,
-        support_system_process: true,
-    },
     srcs: [
         "types.hal",
     ],
