@@ -24,9 +24,6 @@ package {
 cc_library {
     name: "libhidlallocatorutils",
     vendor_available: true,
-    vndk: {
-        enabled: true,
-    },
     double_loadable: true,
     defaults: ["libhidl-defaults"],
     shared_libs: [

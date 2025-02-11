@@ -534,40 +534,35 @@ struct hidl_vec {
 private:
     // Define std interator interface for walking the array contents
     template<bool is_const>
-    class iter : public std::iterator<
-            std::random_access_iterator_tag, /* Category */
-            T,
-            ptrdiff_t, /* Distance */
-            typename std::conditional<is_const, const T *, T *>::type /* Pointer */,
-            typename std::conditional<is_const, const T &, T &>::type /* Reference */>
-    {
-        using traits = std::iterator_traits<iter>;
-        using ptr_type = typename traits::pointer;
-        using ref_type = typename traits::reference;
-        using diff_type = typename traits::difference_type;
+    class iter {
     public:
-        iter(ptr_type ptr) : mPtr(ptr) { }
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using difference_type = ptrdiff_t;
+        using pointer = std::conditional_t<is_const, const T *, T *>;
+        using reference = std::conditional_t<is_const, const T &, T &>;
+        iter(pointer ptr) : mPtr(ptr) { }
         inline iter &operator++()    { mPtr++; return *this; }
         inline iter  operator++(int) { iter i = *this; mPtr++; return i; }
         inline iter &operator--()    { mPtr--; return *this; }
         inline iter  operator--(int) { iter i = *this; mPtr--; return i; }
-        inline friend iter operator+(diff_type n, const iter &it) { return it.mPtr + n; }
-        inline iter  operator+(diff_type n) const { return mPtr + n; }
-        inline iter  operator-(diff_type n) const { return mPtr - n; }
-        inline diff_type operator-(const iter &other) const { return mPtr - other.mPtr; }
-        inline iter &operator+=(diff_type n) { mPtr += n; return *this; }
-        inline iter &operator-=(diff_type n) { mPtr -= n; return *this; }
-        inline ref_type operator*() const  { return *mPtr; }
-        inline ptr_type operator->() const { return mPtr; }
+        inline friend iter operator+(difference_type n, const iter &it) { return it.mPtr + n; }
+        inline iter  operator+(difference_type n) const { return mPtr + n; }
+        inline iter  operator-(difference_type n) const { return mPtr - n; }
+        inline difference_type operator-(const iter &other) const { return mPtr - other.mPtr; }
+        inline iter &operator+=(difference_type n) { mPtr += n; return *this; }
+        inline iter &operator-=(difference_type n) { mPtr -= n; return *this; }
+        inline reference operator*() const { return *mPtr; }
+        inline pointer operator->() const  { return mPtr; }
         inline bool operator==(const iter &rhs) const { return mPtr == rhs.mPtr; }
         inline bool operator!=(const iter &rhs) const { return mPtr != rhs.mPtr; }
         inline bool operator< (const iter &rhs) const { return mPtr <  rhs.mPtr; }
         inline bool operator> (const iter &rhs) const { return mPtr >  rhs.mPtr; }
         inline bool operator<=(const iter &rhs) const { return mPtr <= rhs.mPtr; }
         inline bool operator>=(const iter &rhs) const { return mPtr >= rhs.mPtr; }
-        inline ref_type operator[](size_t n) const { return mPtr[n]; }
+        inline reference operator[](size_t n) const { return mPtr[n]; }
     private:
-        ptr_type mPtr;
+        pointer mPtr;
     };
 public:
     using iterator       = iter<false /* is_const */>;

@@ -34,14 +34,10 @@ cc_library {
             enabled: false,
         },
     },
-    vndk: {
-        enabled: true,
-        support_system_process: true,
-    },
+    double_loadable: true,
     apex_available: [
         "//apex_available:platform",
         "com.android.neuralnetworks",
-        "test_com.android.neuralnetworks",
         "com.android.media",
         "com.android.media.swcodec",
     ],

@@ -72,6 +72,9 @@ LIBHIDL_EXPORT status_t registerAsServiceInternal(const sp<::android::hidl::base
                                    const std::string& name);
 }  // namespace details
 
+// Returns whether or not HIDL is supported on this device
+bool isHidlSupported();
+
 // These functions are for internal use by hidl. If you want to get ahold
 // of an interface, the best way to do this is by calling IFoo::getService()
 LIBHIDL_EXPORT sp<::android::hidl::manager::V1_0::IServiceManager> defaultServiceManager();
