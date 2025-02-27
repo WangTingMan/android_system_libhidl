@@ -124,7 +124,7 @@ static std::string packageWithoutVersion(const std::string& packageAndVersion) {
     return packageAndVersion.substr(0, at);
 }
 
-__attribute__((noinline)) static void tryShortenProcessName(const std::string& descriptor) {
+/*__attribute__((noinline))*/ static void tryShortenProcessName(const std::string& descriptor) {
     const static std::string kTasks = "/proc/self/task/";
 
     // make sure that this binary name is in the same package
@@ -230,17 +230,6 @@ static bool isServiceManager(const hidl_string& fqName) {
     return fqName == IServiceManager1_0::descriptor || fqName == IServiceManager1_1::descriptor ||
            fqName == IServiceManager1_2::descriptor;
 }
-<<<<<<< HEAD
-static bool isHwServiceManagerInstalled() {
-#ifdef _MSC_VER
-    ALOGI( "We always treat it as OK" );
-    return true;
-#else
-    return access("/system/bin/hwservicemanager", F_OK) == 0;
-#endif
-}
-=======
->>>>>>> b34195f
 
 /*
  * A replacement for hwservicemanager when it is not installed on a device.
@@ -403,24 +392,13 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
             return gDefaultServiceManager;
         }
 
-<<<<<<< HEAD
-        if (!isHwServiceManagerInstalled()) {
-            // hwservicemanager is not available on this device.
-            gDefaultServiceManager = sp<NoHwServiceManager>::make();
-            return gDefaultServiceManager;
-        }
 #ifndef _MSC_VER
-=======
->>>>>>> b34195f
         if (access("/dev/hwbinder", F_OK|R_OK|W_OK) != 0) {
             // HwBinder not available on this device or not accessible to
             // this process.
             return nullptr;
         }
-<<<<<<< HEAD
 #endif
-        waitForHwServiceManager();
-=======
 
         if (!isHidlSupported()) {
             // hwservicemanager is not available on this device.
@@ -428,7 +406,6 @@ sp<IServiceManager1_2> defaultServiceManager1_2() {
             gDefaultServiceManager = sp<NoHwServiceManager>::make();
             return gDefaultServiceManager;
         }
->>>>>>> b34195f
 
         while (gDefaultServiceManager == nullptr) {
             gDefaultServiceManager =

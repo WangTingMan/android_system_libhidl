@@ -33,7 +33,7 @@ namespace details {
 using RegisterServiceCb =
         std::function<status_t(const sp<::android::hidl::base::V1_0::IBase>&, const std::string&)>;
 
-__attribute__((warn_unused_result)) LIBHIDL_EXPORT status_t registerPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ LIBHIDL_EXPORT status_t registerPassthroughServiceImplementation(
         const std::string& interfaceName, const std::string& expectInterfaceName,
         RegisterServiceCb registerServiceCb, const std::string& serviceName = "default");
 
@@ -42,17 +42,17 @@ __attribute__((warn_unused_result)) LIBHIDL_EXPORT status_t registerPassthroughS
 /**
  * Registers passthrough service implementation.
  */
-__attribute__((warn_unused_result)) LIBHIDL_EXPORT status_t registerPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ LIBHIDL_EXPORT status_t registerPassthroughServiceImplementation(
         const std::string& interfaceName, const std::string& expectInterfaceName,
         const std::string& serviceName);
 
-inline __attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
+inline /*__attribute__((warn_unused_result))*/ status_t registerPassthroughServiceImplementation(
         const std::string& interfaceName, const std::string& serviceName = "default") {
     return registerPassthroughServiceImplementation(interfaceName, interfaceName, serviceName);
 }
 
 template <class Interface, class ExpectInterface = Interface>
-__attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t registerPassthroughServiceImplementation(
         const std::string& name = "default") {
     return registerPassthroughServiceImplementation(Interface::descriptor,
                                                     ExpectInterface::descriptor, name);
@@ -64,7 +64,7 @@ __attribute__((warn_unused_result)) status_t registerPassthroughServiceImplement
  * Return value is exit status.
  */
 template <class Interface, class ExpectInterface = Interface>
-__attribute__((warn_unused_result)) status_t defaultPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t defaultPassthroughServiceImplementation(
         const std::string& name, size_t maxThreads = 1) {
     configureRpcThreadpool(maxThreads, true);
     status_t result = registerPassthroughServiceImplementation<Interface, ExpectInterface>(name);
@@ -77,7 +77,7 @@ __attribute__((warn_unused_result)) status_t defaultPassthroughServiceImplementa
     return UNKNOWN_ERROR;
 }
 template <class Interface, class ExpectInterface = Interface>
-__attribute__((warn_unused_result)) status_t defaultPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t defaultPassthroughServiceImplementation(
         size_t maxThreads = 1) {
     return defaultPassthroughServiceImplementation<Interface, ExpectInterface>("default",
                                                                                maxThreads);
@@ -92,7 +92,7 @@ __attribute__((warn_unused_result)) status_t defaultPassthroughServiceImplementa
  * this one, the process may exit while a client is still using the HAL.
  */
 template <class Interface, class ExpectInterface = Interface>
-__attribute__((warn_unused_result)) status_t registerLazyPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t registerLazyPassthroughServiceImplementation(
         const std::string& name = "default") {
     return details::registerPassthroughServiceImplementation(
             Interface::descriptor, ExpectInterface::descriptor,
@@ -110,7 +110,7 @@ __attribute__((warn_unused_result)) status_t registerLazyPassthroughServiceImple
  * Return value is exit status.
  */
 template <class Interface, class ExpectInterface = Interface>
-__attribute__((warn_unused_result)) status_t defaultLazyPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t defaultLazyPassthroughServiceImplementation(
         const std::string& name, size_t maxThreads = 1) {
     configureRpcThreadpool(maxThreads, true);
     status_t result =
@@ -124,7 +124,7 @@ __attribute__((warn_unused_result)) status_t defaultLazyPassthroughServiceImplem
     return UNKNOWN_ERROR;
 }
 template <class Interface, class ExpectInterface = Interface>
-__attribute__((warn_unused_result)) status_t defaultLazyPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t defaultLazyPassthroughServiceImplementation(
         size_t maxThreads = 1) {
     return defaultLazyPassthroughServiceImplementation<Interface, ExpectInterface>("default",
                                                                                    maxThreads);

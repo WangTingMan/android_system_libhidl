@@ -28,7 +28,7 @@ namespace android::hardware {
 
 namespace details {
 
-__attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t registerPassthroughServiceImplementation(
         const std::string& interfaceName, const std::string& expectInterfaceName,
         RegisterServiceCb registerServiceCb, const std::string& serviceName) {
     sp<IBase> service =
@@ -71,7 +71,7 @@ __attribute__((warn_unused_result)) status_t registerPassthroughServiceImplement
 
 }  // namespace details
 
-__attribute__((warn_unused_result)) status_t registerPassthroughServiceImplementation(
+/*__attribute__((warn_unused_result))*/ status_t registerPassthroughServiceImplementation(
         const std::string& interfaceName, const std::string& expectInterfaceName,
         const std::string& serviceName) {
     return details::registerPassthroughServiceImplementation(

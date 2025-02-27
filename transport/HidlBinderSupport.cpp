@@ -220,7 +220,7 @@ status_t writeToParcel(const Status &s, Parcel* parcel) {
 // This function is to sandbox a cast through a BpHw* class into a function, so
 // that we can remove cfi sanitization from it. Do not add additional
 // functionality here.
-__attribute__((no_sanitize("cfi"))) static inline BpHwRefBase* forceGetRefBase(
+/*__attribute__((no_sanitize("cfi")))*/ static inline BpHwRefBase* forceGetRefBase(
         ::android::hidl::base::V1_0::IBase* ifacePtr) {
     using ::android::hidl::base::V1_0::BpHwBase;
 
