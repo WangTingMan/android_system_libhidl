@@ -23,6 +23,7 @@
 
 #include <android/hidl/manager/1.2/IClientCallback.h>
 #include <android/hidl/manager/1.2/IServiceManager.h>
+#include <mutex>
 
 namespace android {
 namespace hardware {
